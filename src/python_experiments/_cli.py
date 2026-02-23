@@ -4,7 +4,7 @@ from typing import Annotated
 import click
 import typer
 
-from python_experiments.utils import setup_logger, typer_exit
+from python_experiments.utils import setup_logger
 
 app = typer.Typer(
     context_settings={"help_option_names": ["-h", "--help"]},
@@ -52,6 +52,5 @@ def setup_app(
 
 
 @app.command("pass")
-@typer_exit()
 def pass_() -> None:
     pass

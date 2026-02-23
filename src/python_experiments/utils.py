@@ -1,23 +1,20 @@
 """Simple generic utils."""
 
 import asyncio
-import functools
 import inspect
 import logging
 import os
 import shlex
 import subprocess
 import sys
-import time
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar, Self, overload
+from typing import TYPE_CHECKING, Any, ClassVar, Self
 
-import typer
 from rich.logging import RichHandler
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Mapping, Sequence
+    from collections.abc import Mapping, Sequence
     from types import TracebackType
 
 _logger = logging.getLogger(__name__)
@@ -55,19 +52,6 @@ async def cancel_and_wait(task: asyncio.Task[Any], msg: str | None = None) -> No
     # An expected CancelledError was not seen
     msg = f"Cancelled task did not end with an exception: {task}"
     raise RuntimeError(msg)
-
-
-def merge_dicts(*, from_this: dict[str, Any], into_this: dict[str, Any]) -> None:
-    """Recursively merges the `from_this` dictionary into the `into_this` dictionary."""
-    for key, value in from_this.items():
-        if key not in into_this:
-            into_this[key] = value
-            continue
-
-        if isinstance(value, dict) and isinstance(into_this[key], dict):
-            merge_dicts(into_this=into_this[key], from_this=value)
-        else:
-            into_this[key] = value
 
 
 class ContextLogger:
@@ -368,65 +352,6 @@ def run_shell(  # noqa: PLR0913
     )
 
 
-@overload
-def retry[**P, R](
-    func: Callable[P, R],
-    *,
-    delay: float = ...,
-    max_tries: int = ...,
-    suppress_logger: bool = ...,
-) -> Callable[P, R]: ...
-
-
-@overload
-def retry[**P, R](
-    func: None = None,
-    *,
-    delay: float = ...,
-    max_tries: int = ...,
-    suppress_logger: bool = ...,
-) -> Callable[[Callable[P, R]], Callable[P, R]]: ...
-
-
-def retry[**P, R](
-    func: Callable[P, R] | None = None,
-    *,
-    delay: float = 5,
-    max_tries: int = 5,
-    suppress_logger: bool = False,
-) -> Callable[[Callable[P, R]], Callable[P, R]] | Callable[P, R]:
-    """Decorate function with retry on exception with a delay between tries."""
-    if max_tries <= 0:
-        msg = f"max_tries must be greater than 0, got {max_tries}"
-        raise ValueError(msg)
-
-    def retry_decorator(func: Callable[P, R]) -> Callable[P, R]:
-        @functools.wraps(func)
-        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
-            for i in range(max_tries):
-                wrapper.current_try = i  # type: ignore[attr-defined]
-                try:
-                    return func(*args, **kwargs)
-                # pylint: disable-next=broad-except
-                except Exception as exc:
-                    if i + 1 >= max_tries:
-                        raise
-                    if not suppress_logger:
-                        _logger.warning(f"Function '{func.__name__}' failed with error:")
-                        _logger.warning(f"  {type(exc).__name__}: {exc}")
-                        _logger.warning(f"  Retry {i + 2} of {max_tries}...")
-                    time.sleep(delay)
-            msg = "Unreachable."
-            raise AssertionError(msg)
-
-        return wrapper
-
-    if func is not None:
-        return retry_decorator(func)
-
-    return retry_decorator
-
-
 class _LoggerFormatter(logging.Formatter):
     formats: ClassVar[dict[int, str]] = {
         logging.DEBUG: "[grey]%(message)s[/]",
@@ -455,46 +380,3 @@ def setup_logger(logger: logging.Logger | None = None) -> None:
     handler.setFormatter(_LoggerFormatter())
     handler.console.stderr = True
     logger.addHandler(handler)
-
-
-@overload
-def typer_exit[**P, R](
-    func: Callable[P, R],
-    *,
-    exceptions: tuple[type[Exception], ...] = ...,
-    code: int = ...,
-) -> Callable[P, R]: ...
-
-
-@overload
-def typer_exit[**P, R](
-    func: None = None,
-    *,
-    exceptions: tuple[type[Exception], ...] = ...,
-    code: int = ...,
-) -> Callable[[Callable[P, R]], Callable[P, R]]: ...
-
-
-def typer_exit[**P, R](
-    func: Callable[P, R] | None = None,
-    *,
-    exceptions: tuple[type[Exception], ...] = (Exception,),
-    code: int = 1,
-) -> Callable[[Callable[P, R]], Callable[P, R]] | Callable[P, R]:
-    """Decorate top-level typer command function to catch exceptions and exit with code instead of stack trace."""
-
-    def exit_decorator(func: Callable[P, R]) -> Callable[P, R]:
-        @functools.wraps(func)
-        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
-            try:
-                return func(*args, **kwargs)
-            except exceptions as exc:
-                _logger.error(str(exc))  # noqa: TRY400
-                raise typer.Exit(code) from exc
-
-        return wrapper
-
-    if func is not None:
-        return exit_decorator(func)
-
-    return exit_decorator
