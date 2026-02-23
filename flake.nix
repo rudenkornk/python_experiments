@@ -40,7 +40,9 @@
         ];
 
         shellHook = ''
-          uv sync
+          # See https://github.com/astral-sh/uv/issues/6349 for details why not use `uv sync`.
+          uv venv
+          uv pip sync <(uv export --format requirements.txt --frozen)
           source .venv/bin/activate
           echo "Welcome to the project devshell!"
         '';
