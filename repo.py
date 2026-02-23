@@ -10,7 +10,7 @@ from typing import Annotated
 
 import typer
 
-from python_experiments.utils import run_shell, setup_logger, typer_exit
+from python_experiments.utils import run_shell, setup_logger
 
 _logger = logging.getLogger(__name__)
 _repo_path = Path(__file__).parent
@@ -49,7 +49,6 @@ def _check_leaked_credentials(repo_path: Path) -> None:
 
 
 @app.command()
-@typer_exit
 def lint() -> None:
     """Lint code."""
     run_shell(["ruff", "check"], cwd=_repo_path)
@@ -68,7 +67,6 @@ def lint() -> None:
 
 
 @app.command(name="format")
-@typer_exit
 def format_code(
     *,
     check: Annotated[
