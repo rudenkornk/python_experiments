@@ -7,15 +7,13 @@ import os
 import shlex
 import subprocess
 import sys
+from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar, Self
+from types import TracebackType
+from typing import Any, ClassVar, Self
 
 from rich.logging import RichHandler
-
-if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
-    from types import TracebackType
 
 _logger = logging.getLogger(__name__)
 
