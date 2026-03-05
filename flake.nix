@@ -22,7 +22,7 @@
       devShells.${system}.default = pkgs.mkShell {
         packages = with pkgs; [
           # Bootstrap python & python packages.
-          python314
+          python313
           uv
 
           # Format & lint tools.

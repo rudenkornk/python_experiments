@@ -3,7 +3,7 @@ name = "python_experiments"
 dynamic = ["version"]
 description = "Base python project for experiments."
 readme = "readme.md"
-requires-python = ">=3.14"
+requires-python = ">=3.13"
 dependencies = [
   # CLI tools.
   "typer>=0.16.0", # Primary CLI engine.
