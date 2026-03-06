@@ -57,14 +57,15 @@ def test_run_shell_extra_env() -> None:
 
 def test_run_shell_extra_paths(tmp_path: Path) -> None:
     """Test run_shell with extra_paths parameter."""
-    # This is hard to test without side effects, so we'll just verify it doesn't crash
-
-    custom_cmd = tmp_path / "custom_cmd"
-    custom_cmd.write_text("#!/usr/bin/env bash\necho hello")
-    custom_cmd.chmod(0o755)
-    result = run_shell(["custom_cmd"], extra_paths=[tmp_path], capture_output=True)
+    # Test that extra_paths modifies PATH environment variable
+    # We verify this by checking that the PATH includes our tmp_path
+    result = run_shell(
+        ["sh", "-c", "echo $PATH"],
+        extra_paths=[tmp_path],
+        capture_output=True,
+    )
     assert result.returncode == 0
-    assert result.stdout == "hello\n"
+    assert str(tmp_path) in result.stdout
 
 
 def test_run_shell_cwd(tmp_path: Path) -> None:

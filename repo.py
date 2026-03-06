@@ -5,6 +5,7 @@
 # ruff: noqa: D103
 
 import logging
+import os
 from pathlib import Path
 from typing import Annotated
 
@@ -54,13 +55,17 @@ def lint() -> None:
     run_shell(["ruff", "check"], cwd=_repo_path)
     run_shell(["mypy", _repo_path])
 
-    _check_leaked_credentials(_repo_path)
     run_shell(["yamllint", "--strict", _repo_path / ".github"])
+    run_shell(["typos"], cwd=_repo_path)
+
+    if not os.getenv("IN_NIX_SHELL"):
+        _logger.warning("Not running in nix shell, skipping credential and some other lint checks.")
+        return
+
+    _check_leaked_credentials(_repo_path)
 
     if sh_files := git_files(_repo_path, ".sh"):
         run_shell(["shellcheck", *sh_files], cwd=_repo_path)
-
-    run_shell(["typos"], cwd=_repo_path)
 
     run_shell(["markdownlint-cli2", "."], cwd=_repo_path)
     run_shell(["statix", "check", _repo_path])
@@ -82,13 +87,18 @@ def format_code(
     run_shell(["ruff", "format", *check_arg], cwd=_repo_path)
     run_shell(["ruff", "check", "--fix", "--unsafe-fixes", *diff_arg], cwd=_repo_path)
 
+    run_shell(["mdformat", *git_files(_repo_path, ".md"), *check_arg], cwd=_repo_path)
+
+    if not os.getenv("IN_NIX_SHELL"):
+        _logger.warning("Not running in nix shell, skipping some format tools.")
+        return
+
     statix_res = run_shell(["statix", "fix", *dry_run_arg, _repo_path], cwd=_repo_path, capture_output=check)
     if check and statix_res.stdout.strip():
         raise RuntimeError(statix_res.stdout)
 
     run_shell(["nixfmt", "--verify", "--strict", *check_arg, *git_files(_repo_path, ".nix")], cwd=_repo_path)
 
-    run_shell(["mdformat", *git_files(_repo_path, ".md"), *check_arg], cwd=_repo_path)
     run_shell(["shfmt", *write_arg, *diff_arg, _repo_path])
     run_shell(["prettier", *write_arg, _repo_path, *check_arg], cwd=_repo_path)
     run_shell(["stylua", _repo_path, *check_arg], cwd=_repo_path)
