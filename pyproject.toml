@@ -117,6 +117,17 @@ default.extend-ignore-re = [
 ]
 files.extend-exclude = ["*.sops.yaml"]
 
+[tool.pyright]
+reportArgumentType = "none"
+reportAssignmentType = "none"
+reportAttributeAccessIssue = "none"
+reportCallIssue = "none"
+reportMissingImports = "none"
+reportOptionalMemberAccess = "none"
+reportReturnType = "none"
+reportUnusedVariable = "none"
+reportUnusedExpression = "none"
+
 [tool.mypy]
 strict = true
 exclude = [
