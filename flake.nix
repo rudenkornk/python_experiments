@@ -1,7 +1,7 @@
 {
   inputs = {
     nixpkgs = {
-      url = "github:nixos/nixpkgs/nixos-25.11";
+      url = "github:nixos/nixpkgs/nixos-unstable";
     };
     nur = {
       url = "github:nix-community/nur";
@@ -43,7 +43,9 @@
         mypy
         nixfmt
         prettier
-        pythonPkgs.mdformat-tables
+        pythonPkgs.mdformat
+        pythonPkgs.mdformat-beautysh
+        pythonPkgs.mdformat-gfm
         ruff
         shellcheck
         shfmt
@@ -77,7 +79,7 @@
         nativeCheckInputs = [ pythonPkgs.pytestCheckHook ] ++ testDependencies;
 
         # Disable coverage during nix build since the sandbox is read-only
-        pytestFlagsArray = [ "--no-cov" ];
+        pytestFlags = [ "--no-cov" ];
       };
 
       devShells.${system}.default = pkgs.mkShell {
