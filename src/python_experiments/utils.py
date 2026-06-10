@@ -6,7 +6,6 @@ import logging
 import os
 import shlex
 import subprocess
-import sys
 from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -18,38 +17,19 @@ from rich.logging import RichHandler
 _logger = logging.getLogger(__name__)
 
 
-async def cancel_and_wait(task: asyncio.Task[Any], msg: str | None = None) -> None:
+async def cancel_and_wait[T](task: asyncio.Task[T], msg: str | None = None) -> T | BaseException:
     """Cancel the task and wait for it to finish.
 
     :param task: the asyncio Task to cancel.
     See https://superfastpython.com/asyncio-cancel-task-and-wait/
     """
     task.cancel(msg)
-    try:
-        await task
-    except asyncio.CancelledError as exc:
-        # Two options here:
-        # 1. We successfully cancelled the task and it raised CancelledError.
-        #    In this case we need to suppress the exception and return.
-        # 2. Cancellation was sent to this `cancel_and_wait` func.
-        #    In this case we need to bubble the exception up.
-
-        if sys.version_info < (3, 11):  # noqa: UP036
-            # Unfortunately not supported in python 3.10, so just quietly return
-            return
-
-        current_task = asyncio.current_task()
-        err = "Fatal bug, cannot acquire asyncio Task object of current coroutine."
-        if current_task is None:
-            raise AssertionError(err) from exc
-
-        if current_task.cancelling() > 0:  # type: ignore[attr-defined, unused-ignore]
-            raise
-
-        return
-    # An expected CancelledError was not seen
-    msg = f"Cancelled task did not end with an exception: {task}"
-    raise RuntimeError(msg)
+    # Two options here:
+    # 1. We successfully cancelled the task and it raised CancelledError.
+    #    In this case exception is suppressed and we successfully return.
+    # 2. Cancellation was sent to this `cancel_and_wait` func.
+    #    CancelledError is raised from `asyncio.gather` itself and bubbled up.
+    return (await asyncio.gather(task, return_exceptions=True))[0]
 
 
 class ContextLogger:

@@ -38,11 +38,3 @@ async def test_cancel_cancel_and_wait() -> None:
 
     with pytest.raises(asyncio.CancelledError):
         await cancel_task
-
-
-async def test_cancel_and_wait_suppress() -> None:
-    marker: list[str] = []
-    task = asyncio.create_task(model_task(marker, suppress=True))
-    await asyncio.sleep(0.5)
-    with pytest.raises(RuntimeError):
-        await cancel_and_wait(task)
