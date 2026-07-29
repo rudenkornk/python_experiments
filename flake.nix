@@ -87,6 +87,9 @@
         shellHook = ''
           export PYTHONPATH="$PWD/src:$PWD:$PYTHONPATH"
           export IN_NIX_SHELL=impure
+          # `$PWD` puts the repo root on PYTHONPATH so the interpreter imports `sitecustomize.py`,
+          # which starts coverage in subprocesses.
+          # See that file for why coverage's `patch = ["subprocess"]` cannot replace it here.
           export COVERAGE_PROCESS_START="$PWD/pyproject.toml"
           echo "Welcome to the project devshell!"
         '';
