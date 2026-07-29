@@ -6,7 +6,7 @@
   };
 
   outputs =
-    { nixpkgs, ... }:
+    { self, nixpkgs, ... }:
     let
       system = "x86_64-linux";
       pkgs = import nixpkgs {
@@ -90,5 +90,8 @@
           echo "Welcome to the project devshell!"
         '';
       };
+
+      # `nix flake check` builds the package, which runs the pytest suite via pytestCheckHook.
+      checks.${system}.default = self.packages.${system}.default;
     };
 }
