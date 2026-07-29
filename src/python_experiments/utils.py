@@ -70,8 +70,16 @@ class ContextLogger:
     def _get_logger(logger: logging.Logger | None) -> logging.Logger:
         if logger is not None:
             return logger
-        logger_module = inspect.stack()[1].frame.f_globals["__name__"]
-        return logging.getLogger(logger_module)
+        # `_get_logger` is invoked from within this module (`__init__` / `status`),
+        # so walk up the stack until we leave `utils`.
+        # That frame is the module that constructed the `ContextLogger`, as the docstring promises.
+        # `inspect.stack()` is avoided: it snapshots the whole stack with source context on every construction,
+        # which is needlessly slow.
+        frame = inspect.currentframe()
+        while frame is not None and frame.f_globals.get("__name__") == __name__:
+            frame = frame.f_back
+        module = __name__ if frame is None else frame.f_globals.get("__name__", __name__)
+        return logging.getLogger(module)
 
     @staticmethod
     def _prefix(tag: str) -> str:
