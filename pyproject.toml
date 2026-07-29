@@ -3,6 +3,8 @@ name = "python_experiments"
 version = "0.1.0"
 description = "Base python project for experiments."
 readme = "readme.md"
+license = "MIT"
+license-files = ["license.md"]
 requires-python = ">=3.13"
 dependencies = [
   # CLI tools.
