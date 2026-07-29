@@ -99,3 +99,16 @@ async def test_async_exception_context(*, caplog: pytest.LogCaptureFixture) -> N
 def test_double_entrance() -> None:
     with ContextLogger(msg="") as logger, logger:
         pass
+
+
+def test_logger_named_after_calling_module(*, caplog: pytest.LogCaptureFixture) -> None:
+    """A logger inferred from the call site is named after the caller, not `utils`."""
+    caplog.set_level(1)
+
+    with ContextLogger(msg="task"):
+        pass
+    ContextLogger.status("task")
+
+    emitted = {record.name for record in caplog.records}
+    assert emitted == {__name__}, emitted
+    assert "python_experiments.utils" not in emitted
