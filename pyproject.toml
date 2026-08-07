@@ -96,6 +96,11 @@ ignore = [
   # "Import alias does not rename original package."
   # This is used to reexport symbols.
   "PLC0414",
+
+  # "Missing copyright notice at top of file"
+  # This is a personal project and does not use copyright headers.
+  # CPY001 was stabilized out of preview in ruff 0.16, so it started firing here.
+  "CPY001",
 ]
 
 [tool.ruff.lint.per-file-ignores]
