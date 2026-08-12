@@ -24,6 +24,7 @@
       ) project.dependencies;
 
       testDependencies = with pythonPkgs; [
+        ipython
         pytest
         pytest-asyncio
         pytest-cov
