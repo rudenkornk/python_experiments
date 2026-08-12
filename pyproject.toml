@@ -11,6 +11,7 @@ dependencies = [
   "typer>=0.16.0", # Primary CLI engine.
   "click>=8.1.7",  # Used for some typer tweaking.
   "rich>=14.0.0",
+  "numpy>=2.5.1",
 ]
 
 [dependency-groups]
