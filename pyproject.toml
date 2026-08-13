@@ -12,6 +12,7 @@ dependencies = [
   "click>=8.1.7",  # Used for some typer tweaking.
   "rich>=14.0.0",
   "numpy>=2.5.1",
+  "sympy>=1.14.0",
 ]
 
 [dependency-groups]
