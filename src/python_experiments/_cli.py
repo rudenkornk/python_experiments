@@ -1,7 +1,6 @@
 import logging
-from typing import Annotated
+from typing import Annotated, Literal, TypeAlias
 
-import click
 import typer
 
 from python_experiments.utils import setup_logger
@@ -32,18 +31,18 @@ loglevel_map = {
     "critical": logging.CRITICAL,
 }
 
+LogLevel: TypeAlias = Literal[tuple(loglevel_map)]  # type: ignore[valid-type]  # noqa: UP040
+
 
 @app.callback()
 def setup_app(
     *,
     loglevel: Annotated[
-        str,
+        LogLevel,
         typer.Option(
             "-l",
             "--log-level",
-            click_type=click.Choice(list(loglevel_map.keys())),
             help="Logging level.",
-            case_sensitive=False,
         ),
     ] = "info",
 ) -> None:
